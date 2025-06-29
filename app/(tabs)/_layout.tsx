@@ -8,6 +8,10 @@ import TabBarBackground from '@/components/ui/TabBarBackground';
 import { Colors } from '@/constants/Colors';
 import { useColorScheme } from '@/hooks/useColorScheme';
 
+/**
+ * 탭 네비게이션 레이아웃
+ * 하단에 Home, Explore, More 탭을 제공
+ */
 export default function TabLayout() {
   const colorScheme = useColorScheme();
 
@@ -26,18 +30,28 @@ export default function TabLayout() {
           default: {},
         }),
       }}>
+      {/* 홈 탭 - 상담 채팅 */}
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Home',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="house.fill" color={color} />,
+          title: '상담',
+          tabBarIcon: ({ color }) => <IconSymbol size={28} name="message.fill" color={color} />,
         }}
       />
+      {/* 연락처 탭 - 상담사 목록 */}
       <Tabs.Screen
         name="explore"
         options={{
-          title: 'Explore',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="paperplane.fill" color={color} />,
+          title: '연락처',
+          tabBarIcon: ({ color }) => <IconSymbol size={28} name="clock.fill" color={color} />,
+        }}
+      />
+      {/* 더보기 탭 - 설정 및 기타 */}
+      <Tabs.Screen
+        name="more"
+        options={{
+          title: '설정',
+          tabBarIcon: ({ color }) => <IconSymbol size={28} name="ellipsis.circle.fill" color={color} />,
         }}
       />
     </Tabs>
