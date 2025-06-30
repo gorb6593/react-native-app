@@ -30,25 +30,33 @@ export default function TabLayout() {
           default: {},
         }),
       }}>
-      {/* 홈 탭 - 상담 채팅 */}
+      {/* 홈 탭 - 글 목록 */}
       <Tabs.Screen
-        name="index"
+        name="home"
         options={{
-          title: '상담',
+          title: '홈',
+          tabBarIcon: ({ color }) => <IconSymbol size={28} name="house.fill" color={color} />,
+        }}
+      />
+      {/* 글쓰기 탭 */}
+      <Tabs.Screen
+        name="write"
+        options={{
+          title: '글쓰기',
+          tabBarIcon: ({ color }) => <IconSymbol size={28} name="paperplane.fill" color={color} />,
+        }}
+      />
+      {/* 채팅 탭 */}
+      <Tabs.Screen
+        name="chat"
+        options={{
+          title: '채팅',
           tabBarIcon: ({ color }) => <IconSymbol size={28} name="message.fill" color={color} />,
         }}
       />
-      {/* 연락처 탭 - 상담사 목록 */}
+      {/* 설정 탭 */}
       <Tabs.Screen
-        name="explore"
-        options={{
-          title: '연락처',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="clock.fill" color={color} />,
-        }}
-      />
-      {/* 더보기 탭 - 설정 및 기타 */}
-      <Tabs.Screen
-        name="more"
+        name="settings"
         options={{
           title: '설정',
           tabBarIcon: ({ color }) => <IconSymbol size={28} name="ellipsis.circle.fill" color={color} />,

@@ -24,7 +24,7 @@ export default function LoginScreen() {
       await AsyncStorage.setItem('userToken', fakeJWT);
       
       // 메인화면으로 이동 (replace를 사용하여 뒤로가기 시 로그인 페이지로 돌아가지 않도록 함)
-      router.replace('/');
+      router.replace('/home');
       
     } catch (error) {
       console.error('로그인 에러:', error);

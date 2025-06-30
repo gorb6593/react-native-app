@@ -72,8 +72,9 @@ export default function RootLayout() {
       console.log('🗑️ JWT 토큰 삭제 중...');
       await AsyncStorage.removeItem('userToken');
       console.log('✅ JWT 토큰 삭제 완료');
-      console.log('🔄 인증 상태를 false로 변경');
       setIsAuthenticated(false);
+      console.log('🔄 인증 상태를 false로 변경');
+      router.replace('/login'); // 로그아웃 후 즉시 로그인 페이지로 이동
     } catch (error) {
       console.error('❌ 로그아웃 에러:', error);
     }
