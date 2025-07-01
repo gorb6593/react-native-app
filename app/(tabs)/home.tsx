@@ -1,4 +1,5 @@
 import * as Location from 'expo-location';
+import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { Alert, FlatList, Image, Modal, Platform, Pressable, SafeAreaView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
@@ -9,7 +10,7 @@ function getPastDate(minutesAgo: number) {
   console.log(`[getPastDate] ${minutesAgo}분 전:`, str);
   return str;
 }
-const testItems = [
+export const testItems: ItemType[] = [
   {
     id: '1',
     type: '잃어버림',
@@ -19,7 +20,11 @@ const testItems = [
     place: '강남역',
     lat: 37.4979,
     lng: 127.0276,
-    image: 'https://images.unsplash.com/photo-1519125323398-675f0ddb6308?auto=format&fit=crop&w=400&q=80',
+    image: [
+      'https://images.unsplash.com/photo-1519125323398-675f0ddb6308?auto=format&fit=crop&w=400&q=80',
+      'https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=400&q=80',
+      'https://images.unsplash.com/photo-1465101046530-73398c7f28ca?auto=format&fit=crop&w=400&q=80',
+    ],
   },
   {
     id: '2',
@@ -30,7 +35,12 @@ const testItems = [
     place: '한강공원',
     lat: 37.5271,
     lng: 126.9326,
-    image: 'https://images.unsplash.com/photo-1518717758536-85ae29035b6d?auto=format&fit=crop&w=400&q=80',
+    image: [
+      'https://images.unsplash.com/photo-1518717758536-85ae29035b6d?auto=format&fit=crop&w=400&q=80',
+      'https://images.unsplash.com/photo-1517336714731-489689fd1ca8?auto=format&fit=crop&w=400&q=80',
+      'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=400&q=80',
+      'https://images.unsplash.com/photo-1464983953574-0892a716854b?auto=format&fit=crop&w=400&q=80',
+    ],
   },
   {
     id: '3',
@@ -41,7 +51,12 @@ const testItems = [
     place: '스타벅스 시청점',
     lat: 37.5663,
     lng: 126.9779,
-    image: 'https://images.unsplash.com/photo-1517336714731-489689fd1ca8?auto=format&fit=crop&w=400&q=80',
+    image: [
+      'https://images.unsplash.com/photo-1517336714731-489689fd1ca8?auto=format&fit=crop&w=400&q=80',
+      'https://images.unsplash.com/photo-1519125323398-675f0ddb6308?auto=format&fit=crop&w=400&q=80',
+      'https://images.unsplash.com/photo-1518717758536-85ae29035b6d?auto=format&fit=crop&w=400&q=80',
+      'https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=400&q=80',
+    ],
   },
   {
     id: '4',
@@ -52,7 +67,11 @@ const testItems = [
     place: '서울역 버스정류장',
     lat: 37.5547,
     lng: 126.9706,
-    image: 'https://images.unsplash.com/photo-1464983953574-0892a716854b?auto=format&fit=crop&w=400&q=80',
+    image: [
+      'https://images.unsplash.com/photo-1465101046530-73398c7f28ca?auto=format&fit=crop&w=400&q=80',
+      'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=400&q=80',
+      'https://images.unsplash.com/photo-1519125323398-675f0ddb6308?auto=format&fit=crop&w=400&q=80',
+    ],
   },
   // 실제 테스트를 위해 강남역 근처(내 위치)와 매우 가까운 데이터 추가
   {
@@ -64,7 +83,12 @@ const testItems = [
     place: '강남역 11번 출구',
     lat: 37.4981,
     lng: 127.0276,
-    image: 'https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=400&q=80',
+    image: [
+      'https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=400&q=80',
+      'https://images.unsplash.com/photo-1517336714731-489689fd1ca8?auto=format&fit=crop&w=400&q=80',
+      'https://images.unsplash.com/photo-1518717758536-85ae29035b6d?auto=format&fit=crop&w=400&q=80',
+      'https://images.unsplash.com/photo-1464983953574-0892a716854b?auto=format&fit=crop&w=400&q=80',
+    ],
   },
   {
     id: '6',
@@ -75,7 +99,12 @@ const testItems = [
     place: '강남역 2호선',
     lat: 37.4979,
     lng: 127.0280,
-    image: 'https://images.unsplash.com/photo-1519125323398-675f0ddb6308?auto=format&fit=crop&w=400&q=80',
+    image: [
+      'https://images.unsplash.com/photo-1519125323398-675f0ddb6308?auto=format&fit=crop&w=400&q=80',
+      'https://images.unsplash.com/photo-1465101046530-73398c7f28ca?auto=format&fit=crop&w=400&q=80',
+      'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=400&q=80',
+      'https://images.unsplash.com/photo-1518717758536-85ae29035b6d?auto=format&fit=crop&w=400&q=80',
+    ],
   },
   {
     id: '7',
@@ -86,7 +115,11 @@ const testItems = [
     place: '구로디지털단지역',
     lat: 37.4850,
     lng: 126.9015,
-    image: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=400&q=80',
+    image: [
+      'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=400&q=80',
+      'https://images.unsplash.com/photo-1519125323398-675f0ddb6308?auto=format&fit=crop&w=400&q=80',
+      'https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=400&q=80',
+    ],
   },
   {
     id: '8',
@@ -97,14 +130,18 @@ const testItems = [
     place: '신대방삼거리역',
     lat: 37.4992,
     lng: 126.9286,
-    image: 'https://images.unsplash.com/photo-1465101046530-73398c7f28ca?auto=format&fit=crop&w=400&q=80',
+    image: [
+      'https://images.unsplash.com/photo-1465101046530-73398c7f28ca?auto=format&fit=crop&w=400&q=80',
+      'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=400&q=80',
+      'https://images.unsplash.com/photo-1517336714731-489689fd1ca8?auto=format&fit=crop&w=400&q=80',
+    ],
   },
 ];
 
 const typeOptions = ['전체', '잃어버림', '발견'];
 const sortOptions = ['최신순', '오래된순'];
 
-type ItemType = {
+export type ItemType = {
   id: string;
   type: string;
   title: string;
@@ -190,6 +227,7 @@ export default function HomeScreen() {
     image: '',
   });
   const [items, setItems] = useState<ItemType[]>(testItems);
+  const router = useRouter();
 
   // 지역별 필터링 함수
   function filterByArea(items: ItemType[]): ItemType[] {
@@ -405,24 +443,20 @@ export default function HomeScreen() {
           <TouchableOpacity 
             style={{ flexDirection: 'row', alignItems: 'center', padding: 12, marginBottom: 0, borderBottomColor: '#eee', borderBottomWidth: 1 }}
             onPress={() => {
-              console.log('현재 시간:', new Date());
+              router.push({ pathname: '../detail/[id]', params: { id: item.id } });
             }}
           >
             {/* 왼쪽: 이미지(여러 개면 horizontal 스크롤) */}
             <View style={{ width: 130, height: 130, marginRight: 2 }}>
-              {Array.isArray(item.image) ? (
-                <FlatList
-                  data={item.image.slice(0, 5)}
-                  horizontal
-                  showsHorizontalScrollIndicator={false}
-                  keyExtractor={(img, idx) => String(idx)}
-                  renderItem={({ item: img }) => (
-                    <Image source={{ uri: img }} style={{ width: 120, height: 120, borderRadius: 18, marginRight: 4 }} resizeMode="cover" />
-                  )}
-                />
-              ) : (
-                <Image source={{ uri: item.image }} style={{ width: 120, height: 120, borderRadius: 18 }} resizeMode="cover" />
-              )}
+              <Image
+                source={
+                  item.image && ((Array.isArray(item.image) && item.image[0]) || (!Array.isArray(item.image) && item.image))
+                    ? { uri: Array.isArray(item.image) ? item.image[0] : item.image }
+                    : require('../../assets/images/icon.png')
+                }
+                style={{ width: 120, height: 120, borderRadius: 18 }}
+                resizeMode="cover"
+              />
             </View>
             {/* 오른쪽: 텍스트 정보 */}
             <View style={{ flex: 1, minWidth: 0 }}>
