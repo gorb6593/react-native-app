@@ -1,7 +1,8 @@
+import { Ionicons } from '@expo/vector-icons';
 import * as Location from 'expo-location';
 import { useRouter } from 'expo-router';
-import React, { useState } from 'react';
-import { Alert, FlatList, Image, Modal, Platform, Pressable, SafeAreaView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import React, { useRef, useState } from 'react';
+import { Alert, FlatList, Image, Modal, Platform, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, TouchableWithoutFeedback, View } from 'react-native';
 
 // 테스트용 잃어버린/발견한 물건 데이터 (위도/경도, 대표이미지 추가)
 function getPastDate(minutesAgo: number) {
@@ -184,8 +185,7 @@ const CHECK_ICON = 'data:image/svg+xml;utf8,<svg width="20" height="20" viewBox=
 const areaOptions = [
   { key: 'near5', label: '주변 5km' },
   { key: 'near10', label: '주변 10km' },
-  { key: 'seoul', label: '서울 전체' },
-  { key: 'gyeonggi', label: '경기도 전체' },
+  { key: 'all', label: '전체' },
 ];
 
 // 상대적 시간 포맷 함수 (NaN 방지 및 포맷 개선)
@@ -228,6 +228,15 @@ export default function HomeScreen() {
   });
   const [items, setItems] = useState<ItemType[]>(testItems);
   const router = useRouter();
+  const scrollRef = useRef(null);
+
+  // 드롭다운 외부 클릭/스크롤 시 닫힘 (드롭다운 내부 클릭 시에는 닫히지 않도록)
+  const handleOuterPress = (e) => {
+    if (areaSelectOpen || typeSelectOpen) {
+      setAreaSelectOpen(false);
+      setTypeSelectOpen(false);
+    }
+  };
 
   // 지역별 필터링 함수
   function filterByArea(items: ItemType[]): ItemType[] {
@@ -245,20 +254,7 @@ export default function HomeScreen() {
         return dist <= 10;
       });
     }
-    if (selectedArea === 'seoul') {
-      // 서울시 대략적 범위: 위도 37.4133~37.7151, 경도 126.7341~127.2693
-      return items.filter((item: ItemType) =>
-        item.lat >= 37.4133 && item.lat <= 37.7151 &&
-        item.lng >= 126.7341 && item.lng <= 127.2693
-      );
-    }
-    if (selectedArea === 'gyeonggi') {
-      // 경기도 대략적 범위: 위도 36.8931~38.3076, 경도 126.1172~127.8723
-      return items.filter((item: ItemType) =>
-        item.lat >= 36.8931 && item.lat <= 38.3076 &&
-        item.lng >= 126.1172 && item.lng <= 127.8723
-      );
-    }
+    // 전체면 필터 없이 모두 반환
     return items;
   }
 
@@ -317,175 +313,185 @@ export default function HomeScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      {/* 상단: 드롭다운 2개 왼쪽, 등록하기 오른쪽, 좌우 여백 추가 */}
-      <View style={{ flexDirection: 'row', alignItems: 'center', marginVertical: 8, paddingHorizontal: 16 }}>
-        <View style={{ flexDirection: 'row', flex: 1 }}>
-          {/* 5km/10km 드롭다운 */}
-          <View style={{ marginRight: 8 }}>
-            <TouchableOpacity
-              style={{
-                paddingHorizontal: 14, paddingVertical: 8, borderRadius: 20, minWidth: 80,
-                backgroundColor: '#eee', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-              }}
-              onPress={() => setAreaSelectOpen(!areaSelectOpen)}
-            >
-              <Text style={{ color: '#333', fontWeight: 'bold' }}>{areaOptions.find(opt => opt.key === selectedArea)?.label}</Text>
-              <Text style={{ marginLeft: 6, color: '#888' }}>{areaSelectOpen ? '▲' : '▼'}</Text>
-            </TouchableOpacity>
-            {areaSelectOpen && (
-              <View style={{ position: 'absolute', top: 44, left: 0, right: 0, backgroundColor: 'white', borderRadius: 12, elevation: 4, shadowColor: '#000', shadowOpacity: 0.1, shadowRadius: 8, zIndex: 10 }}>
-                {areaOptions.filter(opt => opt.key === 'near5' || opt.key === 'near10').map(opt => (
-                  <Pressable
-                    key={opt.key}
-                    style={{ padding: 12, backgroundColor: selectedArea === opt.key ? '#00C85122' : 'transparent', borderRadius: 12 }}
-                    onPress={() => { setSelectedArea(opt.key); setAreaSelectOpen(false); }}
-                  >
-                    <Text style={{ color: selectedArea === opt.key ? '#00C851' : '#333', fontWeight: selectedArea === opt.key ? 'bold' : 'normal' }}>{opt.label}</Text>
-                  </Pressable>
-                ))}
-              </View>
-            )}
-          </View>
-          {/* 전체/잃어버림/발견 드롭다운 */}
-          <View style={{ marginRight: 8 }}>
-            <TouchableOpacity
-              style={{
-                paddingHorizontal: 14, paddingVertical: 8, borderRadius: 20, minWidth: 80,
-                backgroundColor: '#eee', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-              }}
-              onPress={() => setTypeSelectOpen(!typeSelectOpen)}
-            >
-              <Text style={{ color: '#333', fontWeight: 'bold' }}>{selectedType}</Text>
-              <Text style={{ marginLeft: 6, color: '#888' }}>{typeSelectOpen ? '▲' : '▼'}</Text>
-            </TouchableOpacity>
-            {typeSelectOpen && (
-              <View style={{ position: 'absolute', top: 44, left: 0, right: 0, backgroundColor: 'white', borderRadius: 12, elevation: 4, shadowColor: '#000', shadowOpacity: 0.1, shadowRadius: 8, zIndex: 10 }}>
-                {typeOptions.map(type => (
-                  <Pressable
-                    key={type}
-                    style={{ padding: 12, backgroundColor: selectedType === type ? '#00C85122' : 'transparent', borderRadius: 12 }}
-                    onPress={() => { setSelectedType(type); setTypeSelectOpen(false); }}
-                  >
-                    <Text style={{ color: selectedType === type ? '#00C851' : '#333', fontWeight: selectedType === type ? 'bold' : 'normal' }}>{type}</Text>
-                  </Pressable>
-                ))}
-              </View>
-            )}
-          </View>
-        </View>
-        {/* 등록하기 오른쪽 정렬, 오른쪽 여백 */}
-        <TouchableOpacity onPress={() => setModalVisible(true)} style={{ paddingHorizontal: 14, paddingVertical: 8, borderRadius: 20, backgroundColor: '#00C851', marginLeft: 'auto', marginRight: 4 }}>
-          <Text style={{ color: 'white', fontWeight: 'bold' }}>등록하기</Text>
-        </TouchableOpacity>
-      </View>
-      {/* 등록 폼 Modal */}
-      <Modal visible={modalVisible} animationType="slide" transparent>
-        <View style={{ flex: 1, backgroundColor: '#0008', justifyContent: 'center', alignItems: 'center' }}>
-          <View style={{ backgroundColor: 'white', borderRadius: 16, padding: 24, width: 320 }}>
-            <Text style={{ fontWeight: 'bold', fontSize: 18, marginBottom: 12 }}>새 글 등록</Text>
-            {/* 유형 선택 */}
-            <View style={{ flexDirection: 'row', marginBottom: 8 }}>
-              {typeOptions.map(type => (
+      <TouchableWithoutFeedback onPress={handleOuterPress}>
+        <View style={{ flex: 1 }}>
+          {/* 상단: 드롭다운 2개 왼쪽, 검색 아이콘 오른쪽 (기존 위치 유지) */}
+          <View style={{ flexDirection: 'row', alignItems: 'center', marginVertical: 8, paddingHorizontal: 16 }}>
+            <View style={{ flexDirection: 'row', flex: 1 }}>
+              {/* 지역 드롭다운 */}
+              <View style={{ marginRight: 8 }}>
                 <TouchableOpacity
-                  key={type}
                   style={{
-                    paddingHorizontal: 12, paddingVertical: 6, borderRadius: 16, marginRight: 8,
-                    backgroundColor: newItem.type === type ? '#00C851' : '#eee',
+                    paddingHorizontal: 14, paddingVertical: 8, borderRadius: 20, minWidth: 80,
+                    backgroundColor: '#eee', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
                   }}
-                  onPress={() => setNewItem({ ...newItem, type })}
+                  onPress={() => setAreaSelectOpen(!areaSelectOpen)}
                 >
-                  <Text style={{ color: newItem.type === type ? 'white' : '#333', fontWeight: 'bold' }}>{type}</Text>
+                  <Text style={{ color: '#333', fontWeight: 'bold' }}>{areaOptions.find(opt => opt.key === selectedArea)?.label}</Text>
+                  <Text style={{ marginLeft: 6, color: '#888' }}>{areaSelectOpen ? '▲' : '▼'}</Text>
                 </TouchableOpacity>
-              ))}
-            </View>
-            <TextInput
-              placeholder="제목"
-              value={newItem.title}
-              onChangeText={t => setNewItem({ ...newItem, title: t })}
-              style={{ borderWidth: 1, borderColor: '#ddd', borderRadius: 8, marginBottom: 8, padding: 8 }}
-            />
-            <TextInput
-              placeholder="내용"
-              value={newItem.desc}
-              onChangeText={t => setNewItem({ ...newItem, desc: t })}
-              style={{ borderWidth: 1, borderColor: '#ddd', borderRadius: 8, marginBottom: 8, padding: 8, height: 60, textAlignVertical: 'top' }}
-              multiline
-            />
-            <TextInput
-              placeholder="장소"
-              value={newItem.place}
-              onChangeText={t => setNewItem({ ...newItem, place: t })}
-              style={{ borderWidth: 1, borderColor: '#ddd', borderRadius: 8, marginBottom: 8, padding: 8 }}
-            />
-            <TextInput
-              placeholder="이미지 URL (선택)"
-              value={newItem.image}
-              onChangeText={t => setNewItem({ ...newItem, image: t })}
-              style={{ borderWidth: 1, borderColor: '#ddd', borderRadius: 8, marginBottom: 8, padding: 8 }}
-            />
-            <View style={{ flexDirection: 'row', justifyContent: 'flex-end' }}>
-              <TouchableOpacity onPress={() => setModalVisible(false)} style={{ marginRight: 12 }}>
-                <Text style={{ color: '#888', fontWeight: 'bold' }}>취소</Text>
-              </TouchableOpacity>
-              <TouchableOpacity onPress={handleRegister}>
-                <Text style={{ color: '#00C851', fontWeight: 'bold' }}>등록</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      </Modal>
-      {/* 글 목록 */}
-      <FlatList
-        data={filtered}
-        keyExtractor={item => item.id}
-        contentContainerStyle={styles.listContent}
-        renderItem={({ item }) => (
-          <TouchableOpacity 
-            style={{ flexDirection: 'row', alignItems: 'center', padding: 12, marginBottom: 0, borderBottomColor: '#eee', borderBottomWidth: 1 }}
-            onPress={() => {
-              router.push({ pathname: '../detail/[id]', params: { id: item.id } });
-            }}
-          >
-            {/* 왼쪽: 이미지(여러 개면 horizontal 스크롤) */}
-            <View style={{ width: 130, height: 130, marginRight: 2 }}>
-              <Image
-                source={
-                  item.image && ((Array.isArray(item.image) && item.image[0]) || (!Array.isArray(item.image) && item.image))
-                    ? { uri: Array.isArray(item.image) ? item.image[0] : item.image }
-                    : require('../../assets/images/icon.png')
-                }
-                style={{ width: 120, height: 120, borderRadius: 18 }}
-                resizeMode="cover"
-              />
-            </View>
-            {/* 오른쪽: 텍스트 정보 */}
-            <View style={{ flex: 1, minWidth: 0 }}>
-              <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 2 }}>
-                <Text style={[styles.type, item.type === '잃어버림' ? styles.lost : styles.found, { marginRight: 8, fontSize: 15 }]}>{item.type}</Text>
-                <Text
-                  style={[styles.date, { minWidth: 60, maxWidth: 120, textAlign: 'right', overflow: 'visible', flexShrink: 0, flexGrow: 0, fontWeight: 'bold', color: '#888', fontSize: 13 }]}
-                  numberOfLines={1}
-                  ellipsizeMode="tail"
-                >
-                  {getRelativeTime(item.date)}
-                </Text>
+                {areaSelectOpen && (
+                  <TouchableWithoutFeedback onPress={e => e.stopPropagation()}>
+                    <View style={{ position: 'absolute', top: 44, left: 0, right: 0, backgroundColor: 'white', borderRadius: 12, elevation: 4, shadowColor: '#000', shadowOpacity: 0.1, shadowRadius: 8, zIndex: 10 }}>
+                      {areaOptions.map(opt => (
+                        <TouchableOpacity
+                          key={opt.key}
+                          style={{ padding: 12, backgroundColor: selectedArea === opt.key ? '#00C85122' : 'transparent', borderRadius: 12 }}
+                          onPress={() => { setSelectedArea(opt.key); setAreaSelectOpen(false); }}
+                        >
+                          <Text style={{ color: selectedArea === opt.key ? '#00C851' : '#333', fontWeight: selectedArea === opt.key ? 'bold' : 'normal' }}>{opt.label}</Text>
+                        </TouchableOpacity>
+                      ))}
+                    </View>
+                  </TouchableWithoutFeedback>
+                )}
               </View>
-              <Text style={[styles.itemTitle, { fontSize: 18, fontWeight: 'bold', marginBottom: 2 }]} numberOfLines={1} ellipsizeMode="tail">{item.title}</Text>
-              <Text 
-                style={[styles.desc, { fontSize: 14, color: '#444' }]}
-                numberOfLines={1}
-                ellipsizeMode="tail"
-              >
-                {item.desc}
-              </Text>
-              <Text style={[styles.place, { fontSize: 13, color: '#888', marginTop: 2 }]} numberOfLines={1} ellipsizeMode="tail">장소: {item.place}</Text>
+              {/* 유형 드롭다운 (기존대로) */}
+              <View style={{ marginRight: 8 }}>
+                <TouchableOpacity
+                  style={{
+                    paddingHorizontal: 14, paddingVertical: 8, borderRadius: 20, minWidth: 80,
+                    backgroundColor: '#eee', flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+                  }}
+                  onPress={() => setTypeSelectOpen(!typeSelectOpen)}
+                >
+                  <Text style={{ color: '#333', fontWeight: 'bold' }}>{selectedType}</Text>
+                  <Text style={{ marginLeft: 6, color: '#888' }}>{typeSelectOpen ? '▲' : '▼'}</Text>
+                </TouchableOpacity>
+                {typeSelectOpen && (
+                  <TouchableWithoutFeedback onPress={e => e.stopPropagation()}>
+                    <View style={{ position: 'absolute', top: 44, left: 0, right: 0, backgroundColor: 'white', borderRadius: 12, elevation: 4, shadowColor: '#000', shadowOpacity: 0.1, shadowRadius: 8, zIndex: 10 }}>
+                      {typeOptions.map(type => (
+                        <TouchableOpacity
+                          key={type}
+                          style={{ padding: 12, backgroundColor: selectedType === type ? '#00C85122' : 'transparent', borderRadius: 12 }}
+                          onPress={() => { setSelectedType(type); setTypeSelectOpen(false); }}
+                        >
+                          <Text style={{ color: selectedType === type ? '#00C851' : '#333', fontWeight: selectedType === type ? 'bold' : 'normal' }}>{type}</Text>
+                        </TouchableOpacity>
+                      ))}
+                    </View>
+                  </TouchableWithoutFeedback>
+                )}
+              </View>
             </View>
-          </TouchableOpacity>
-        )}
-        ListEmptyComponent={
-          <Text style={styles.emptyText}>해당 지역/반경에 글이 없습니다.</Text>
-        }
-      />
+            {/* 검색 아이콘 버튼 (등록하기 대신) */}
+            <TouchableOpacity onPress={() => Alert.alert('검색', '더 다양한 필터/검색 기능이 추가될 수 있습니다.')} style={{ paddingHorizontal: 14, paddingVertical: 8, borderRadius: 20, backgroundColor: '#eee', marginLeft: 'auto', marginRight: 4 }}>
+              <Ionicons name="search" size={24} color="#333" />
+            </TouchableOpacity>
+          </View>
+          {/* 등록 폼 Modal */}
+          <Modal visible={modalVisible} animationType="slide" transparent>
+            <View style={{ flex: 1, backgroundColor: '#0008', justifyContent: 'center', alignItems: 'center' }}>
+              <View style={{ backgroundColor: 'white', borderRadius: 16, padding: 24, width: 320 }}>
+                <Text style={{ fontWeight: 'bold', fontSize: 18, marginBottom: 12 }}>새 글 등록</Text>
+                {/* 유형 선택 */}
+                <View style={{ flexDirection: 'row', marginBottom: 8 }}>
+                  {typeOptions.map(type => (
+                    <TouchableOpacity
+                      key={type}
+                      style={{
+                        paddingHorizontal: 12, paddingVertical: 6, borderRadius: 16, marginRight: 8,
+                        backgroundColor: newItem.type === type ? '#00C851' : '#eee',
+                      }}
+                      onPress={() => setNewItem({ ...newItem, type })}
+                    >
+                      <Text style={{ color: newItem.type === type ? 'white' : '#333', fontWeight: 'bold' }}>{type}</Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+                <TextInput
+                  placeholder="제목"
+                  value={newItem.title}
+                  onChangeText={t => setNewItem({ ...newItem, title: t })}
+                  style={{ borderWidth: 1, borderColor: '#ddd', borderRadius: 8, marginBottom: 8, padding: 8 }}
+                />
+                <TextInput
+                  placeholder="내용"
+                  value={newItem.desc}
+                  onChangeText={t => setNewItem({ ...newItem, desc: t })}
+                  style={{ borderWidth: 1, borderColor: '#ddd', borderRadius: 8, marginBottom: 8, padding: 8, height: 60, textAlignVertical: 'top' }}
+                  multiline
+                />
+                <TextInput
+                  placeholder="장소"
+                  value={newItem.place}
+                  onChangeText={t => setNewItem({ ...newItem, place: t })}
+                  style={{ borderWidth: 1, borderColor: '#ddd', borderRadius: 8, marginBottom: 8, padding: 8 }}
+                />
+                <TextInput
+                  placeholder="이미지 URL (선택)"
+                  value={newItem.image}
+                  onChangeText={t => setNewItem({ ...newItem, image: t })}
+                  style={{ borderWidth: 1, borderColor: '#ddd', borderRadius: 8, marginBottom: 8, padding: 8 }}
+                />
+                <View style={{ flexDirection: 'row', justifyContent: 'flex-end' }}>
+                  <TouchableOpacity onPress={() => setModalVisible(false)} style={{ marginRight: 12 }}>
+                    <Text style={{ color: '#888', fontWeight: 'bold' }}>취소</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity onPress={handleRegister}>
+                    <Text style={{ color: '#00C851', fontWeight: 'bold' }}>등록</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </View>
+          </Modal>
+          {/* 글 목록 */}
+          <ScrollView ref={scrollRef} onScroll={handleOuterPress} scrollEventThrottle={16}>
+            <FlatList
+              data={filtered}
+              keyExtractor={item => item.id}
+              contentContainerStyle={styles.listContent}
+              renderItem={({ item }) => (
+                <TouchableOpacity 
+                  style={{ flexDirection: 'row', alignItems: 'center', padding: 12, marginBottom: 0, borderBottomColor: '#eee', borderBottomWidth: 1 }}
+                  onPress={() => {
+                    router.push({ pathname: '../detail/[id]', params: { id: item.id } });
+                  }}
+                >
+                  {/* 왼쪽: 이미지(여러 개면 horizontal 스크롤) */}
+                  <View style={{ width: 130, height: 130, marginRight: 2 }}>
+                    <Image
+                      source={
+                        item.image && ((Array.isArray(item.image) && item.image[0]) || (!Array.isArray(item.image) && item.image))
+                          ? { uri: Array.isArray(item.image) ? item.image[0] : item.image }
+                          : require('../../assets/images/icon.png')
+                      }
+                      style={{ width: 120, height: 120, borderRadius: 18 }}
+                      resizeMode="cover"
+                    />
+                  </View>
+                  {/* 오른쪽: 텍스트 정보 */}
+                  <View style={{ flex: 1, minWidth: 0 }}>
+                    <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 2 }}>
+                      <Text style={[styles.type, item.type === '잃어버림' ? styles.lost : styles.found, { marginRight: 8, fontSize: 15 }]}>{item.type}</Text>
+                      <Text
+                        style={[styles.date, { minWidth: 60, maxWidth: 120, textAlign: 'right', overflow: 'visible', flexShrink: 0, flexGrow: 0, fontWeight: 'bold', color: '#888', fontSize: 13 }]}
+                        numberOfLines={1}
+                        ellipsizeMode="tail"
+                      >
+                        {getRelativeTime(item.date)}
+                      </Text>
+                    </View>
+                    <Text style={[styles.itemTitle, { fontSize: 18, fontWeight: 'bold', marginBottom: 2 }]} numberOfLines={1} ellipsizeMode="tail">{item.title}</Text>
+                    <Text 
+                      style={[styles.desc, { fontSize: 14, color: '#444' }]}
+                      numberOfLines={1}
+                      ellipsizeMode="tail"
+                    >
+                      {item.desc}
+                    </Text>
+                    <Text style={[styles.place, { fontSize: 13, color: '#888', marginTop: 2 }]} numberOfLines={1} ellipsizeMode="tail">장소: {item.place}</Text>
+                  </View>
+                </TouchableOpacity>
+              )}
+              ListEmptyComponent={
+                <Text style={styles.emptyText}>해당 지역/반경에 글이 없습니다.</Text>
+              }
+            />
+          </ScrollView>
+        </View>
+      </TouchableWithoutFeedback>
     </SafeAreaView>
   );
 }
