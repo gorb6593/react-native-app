@@ -1,6 +1,6 @@
 import { Stack, useLocalSearchParams, useRouter } from 'expo-router';
 import React, { useState } from 'react';
-import { Dimensions, FlatList, Image, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Dimensions, FlatList, Image, Pressable, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { testItems } from '../(tabs)/home'; // home.tsx에서 테스트 데이터 import (실제 API 연동 전 임시)
 
 const { width } = Dimensions.get('window');
@@ -41,6 +41,7 @@ export default function DetailScreen() {
     }
   }
   const [imgIdx, setImgIdx] = useState(0);
+  const [chatInput, setChatInput] = useState('');
 
   if (!item) {
     return (
@@ -54,6 +55,13 @@ export default function DetailScreen() {
   const onScroll = (e: any) => {
     const idx = Math.round(e.nativeEvent.contentOffset.x / width);
     setImgIdx(idx);
+  };
+
+  // 채팅 보내기 핸들러
+  const handleSendChat = () => {
+    if (!chatInput.trim()) return;
+    // 실제로는 채팅방 생성/이동 로직 필요. 여기서는 글 id+user로 roomId 가정
+    router.push(`/chat/${id}`);
   };
 
   return (
@@ -91,6 +99,18 @@ export default function DetailScreen() {
           <Text style={{ fontSize: 20, fontWeight: 'bold', marginBottom: 8 }}>{item.title}</Text>
           <Text style={{ fontSize: 15, color: '#444', marginBottom: 8 }}>{item.desc}</Text>
           <Text style={{ fontSize: 14, color: '#888' }}>장소: {item.place}</Text>
+        </View>
+        {/* 하단 채팅 입력창 */}
+        <View style={{ flexDirection: 'row', alignItems: 'center', borderTopWidth: 1, borderTopColor: '#eee', padding: 10, backgroundColor: '#fff' }}>
+          <TextInput
+            style={{ flex: 1, borderWidth: 1, borderColor: '#ddd', borderRadius: 20, paddingHorizontal: 16, paddingVertical: 8, fontSize: 16, backgroundColor: '#fafafa', marginRight: 8 }}
+            value={chatInput}
+            onChangeText={setChatInput}
+            placeholder="채팅으로 문의하기..."
+          />
+          <TouchableOpacity onPress={handleSendChat} style={{ backgroundColor: '#00C851', borderRadius: 20, paddingHorizontal: 18, paddingVertical: 8 }}>
+            <Text style={{ color: '#fff', fontWeight: 'bold' }}>보내기</Text>
+          </TouchableOpacity>
         </View>
       </View>
     </>

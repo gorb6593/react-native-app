@@ -2,7 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import * as Location from 'expo-location';
 import { useRouter } from 'expo-router';
 import React, { useRef, useState } from 'react';
-import { Alert, FlatList, Image, Modal, Platform, SafeAreaView, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, TouchableWithoutFeedback, View } from 'react-native';
+import { Alert, FlatList, Image, Modal, Platform, SafeAreaView, StyleSheet, Text, TextInput, TouchableOpacity, TouchableWithoutFeedback, View } from 'react-native';
 
 // 테스트용 잃어버린/발견한 물건 데이터 (위도/경도, 대표이미지 추가)
 function getPastDate(minutesAgo: number) {
@@ -437,59 +437,59 @@ export default function HomeScreen() {
             </View>
           </Modal>
           {/* 글 목록 */}
-          <ScrollView ref={scrollRef} onScroll={handleOuterPress} scrollEventThrottle={16}>
-            <FlatList
-              data={filtered}
-              keyExtractor={item => item.id}
-              contentContainerStyle={styles.listContent}
-              renderItem={({ item }) => (
-                <TouchableOpacity 
-                  style={{ flexDirection: 'row', alignItems: 'center', padding: 12, marginBottom: 0, borderBottomColor: '#eee', borderBottomWidth: 1 }}
-                  onPress={() => {
-                    router.push({ pathname: '../detail/[id]', params: { id: item.id } });
-                  }}
-                >
-                  {/* 왼쪽: 이미지(여러 개면 horizontal 스크롤) */}
-                  <View style={{ width: 130, height: 130, marginRight: 2 }}>
-                    <Image
-                      source={
-                        item.image && ((Array.isArray(item.image) && item.image[0]) || (!Array.isArray(item.image) && item.image))
-                          ? { uri: Array.isArray(item.image) ? item.image[0] : item.image }
-                          : require('../../assets/images/icon.png')
-                      }
-                      style={{ width: 120, height: 120, borderRadius: 18 }}
-                      resizeMode="cover"
-                    />
-                  </View>
-                  {/* 오른쪽: 텍스트 정보 */}
-                  <View style={{ flex: 1, minWidth: 0 }}>
-                    <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 2 }}>
-                      <Text style={[styles.type, item.type === '잃어버림' ? styles.lost : styles.found, { marginRight: 8, fontSize: 15 }]}>{item.type}</Text>
-                      <Text
-                        style={[styles.date, { minWidth: 60, maxWidth: 120, textAlign: 'right', overflow: 'visible', flexShrink: 0, flexGrow: 0, fontWeight: 'bold', color: '#888', fontSize: 13 }]}
-                        numberOfLines={1}
-                        ellipsizeMode="tail"
-                      >
-                        {getRelativeTime(item.date)}
-                      </Text>
-                    </View>
-                    <Text style={[styles.itemTitle, { fontSize: 18, fontWeight: 'bold', marginBottom: 2 }]} numberOfLines={1} ellipsizeMode="tail">{item.title}</Text>
-                    <Text 
-                      style={[styles.desc, { fontSize: 14, color: '#444' }]}
+          <FlatList
+            data={filtered}
+            keyExtractor={item => item.id}
+            contentContainerStyle={styles.listContent}
+            renderItem={({ item }) => (
+              <TouchableOpacity 
+                style={{ flexDirection: 'row', alignItems: 'center', padding: 12, marginBottom: 0, borderBottomColor: '#eee', borderBottomWidth: 1 }}
+                onPress={() => {
+                  router.push({ pathname: '../detail/[id]', params: { id: item.id } });
+                }}
+              >
+                {/* 왼쪽: 이미지(여러 개면 horizontal 스크롤) */}
+                <View style={{ width: 130, height: 130, marginRight: 2 }}>
+                  <Image
+                    source={
+                      item.image && ((Array.isArray(item.image) && item.image[0]) || (!Array.isArray(item.image) && item.image))
+                        ? { uri: Array.isArray(item.image) ? item.image[0] : item.image }
+                        : require('../../assets/images/icon.png')
+                    }
+                    style={{ width: 120, height: 120, borderRadius: 18 }}
+                    resizeMode="cover"
+                  />
+                </View>
+                {/* 오른쪽: 텍스트 정보 */}
+                <View style={{ flex: 1, minWidth: 0 }}>
+                  <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 2 }}>
+                    <Text style={[styles.type, item.type === '잃어버림' ? styles.lost : styles.found, { marginRight: 8, fontSize: 15 }]}>{item.type}</Text>
+                    <Text
+                      style={[styles.date, { minWidth: 60, maxWidth: 120, textAlign: 'right', overflow: 'visible', flexShrink: 0, flexGrow: 0, fontWeight: 'bold', color: '#888', fontSize: 13 }]}
                       numberOfLines={1}
                       ellipsizeMode="tail"
                     >
-                      {item.desc}
+                      {getRelativeTime(item.date)}
                     </Text>
-                    <Text style={[styles.place, { fontSize: 13, color: '#888', marginTop: 2 }]} numberOfLines={1} ellipsizeMode="tail">장소: {item.place}</Text>
                   </View>
-                </TouchableOpacity>
-              )}
-              ListEmptyComponent={
-                <Text style={styles.emptyText}>해당 지역/반경에 글이 없습니다.</Text>
-              }
-            />
-          </ScrollView>
+                  <Text style={[styles.itemTitle, { fontSize: 18, fontWeight: 'bold', marginBottom: 2 }]} numberOfLines={1} ellipsizeMode="tail">{item.title}</Text>
+                  <Text 
+                    style={[styles.desc, { fontSize: 14, color: '#444' }]}
+                    numberOfLines={1}
+                    ellipsizeMode="tail"
+                  >
+                    {item.desc}
+                  </Text>
+                  <Text style={[styles.place, { fontSize: 13, color: '#888', marginTop: 2 }]} numberOfLines={1} ellipsizeMode="tail">장소: {item.place}</Text>
+                </View>
+              </TouchableOpacity>
+            )}
+            ListEmptyComponent={
+              <Text style={styles.emptyText}>해당 지역/반경에 글이 없습니다.</Text>
+            }
+            onScroll={handleOuterPress}
+            scrollEventThrottle={16}
+          />
         </View>
       </TouchableWithoutFeedback>
     </SafeAreaView>
